@@ -1,11 +1,8 @@
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
-from posts.models import Comment, Follow, Group, Post
-
-User = get_user_model()
+from posts.models import Comment, Follow, Group, Post, User
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -36,13 +33,6 @@ class FollowSerializer(serializers.ModelSerializer):
         slug_field='username',
         queryset=User.objects.all(), required=True,)
 
-    def validate(self, data):
-        user = self.context['request'].user
-        following = data['following']
-        if user == following:
-            raise serializers.ValidationError('Запрещена подписка')
-        return data
-
     class Meta:
         fields = ('user', 'following',)
         model = Follow
@@ -52,6 +42,13 @@ class FollowSerializer(serializers.ModelSerializer):
                 fields=['user', 'following']
             )
         ]
+
+    def validate(self, data):
+        user = self.context['request'].user
+        following = data['following']
+        if user == following:
+            raise serializers.ValidationError('Запрещена подписка')
+        return data
 
 
 class GroupSerializer(serializers.ModelSerializer):
